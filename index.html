@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f766e" id="metaThemeColor">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="پیگیری شکایات">
+    <title>سامانه ثبت و پیگیری شکایات بیمارستان</title>
+
+    <!-- مانیفست و آیکون وب‌اپلیکیشن (PWA) -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="apple-touch-icon" href="./icon.svg">
+
+    <!-- فونت وزیرمتن -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <!-- کتابخانه SheetJS برای خروجی استاندارد اکسل XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        /* ==========================================================================
+           طراحی فوق‌حرفه‌ای Material You Expressive (MD3) + AMOLED Dark
+           کاملاً مات، بدون هیچ‌گونه افکت شیشه‌ای (No Liquid Glass / No Blur)
+           ========================================================================== */
+        :root[data-theme="light"] {
+            --bg-app: #eef2f6;
+            --bg-surface-1: #ffffff;
+            --bg-surface-2: #f8fafc;
+            --bg-surface-3: #e2e8f0;
+            --bg-surface-active: #cbd5e1;
+
+            --primary: #0f766e;
+            --primary-strong: #115e59;
+            --primary-container: #ccfbf1;
+            --on-primary-container: #042f2e;
+
+            --secondary: #1d4ed8;
+            --secondary-container: #dbeafe;
+            --on-secondary-container: #1e3a8a;
+
+            --tertiary: #b45309;
+            --tertiary-container: #fef3c7;
+            --on-tertiary-container: #78350f;
+
+            --danger: #dc2626;
+            --danger-container: #fee2e2;
+            --on-danger-container: #7f1d1d;
+
+            --success: #15803d;
+            --success-container: #dcfce7;
+
+            --text-main: #0f172a;
+            --text-sec: #334155;
+            --text-muted: #64748b;
+
+            --border-subtle: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --shadow-card: 0 4px 14px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+            --shadow-float: 0 18px 38px -6px rgba(15, 23, 42, 0.16);
+        }
+
+        :root[data-theme="dark"] {
+            /* استاندارد AMOLED Pitch Black با کنتراست بالا برای کار طولانی‌مدت روی موبایل */
+            --bg-app: #000000;
+            --bg-surface-1: #0d131a;
+            --bg-surface-2: #141c26;
+            --bg-surface-3: #1e2938;
+            --bg-surface-active: #29384c;
+
+            --primary: #2dd4bf;
+            --primary-strong: #14b8a6;
+            --primary-container: #0f3d39;
+            --on-primary-container: #99f6e4;
+
+            --secondary: #60a5fa;
+            --secondary-container: #172e54;
+            --on-secondary-container: #bfdbfe;
+
+            --tertiary: #fbbf24;
+            --tertiary-container: #3d2806;
+            --on-tertiary-container: #fde68a;
+
+            --danger: #f87171;
+            --danger-container: #3f1616;
+            --on-danger-container: #fecaca;
+
+            --success: #4ade80;
+            --success-container: #113320;
+
+            --text-main: #f8fafc;
+            --text-sec: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            --border-subtle: #1e2938;
+            --border-strong: #2e3e52;
+            --shadow-card: 0 6px 16px rgba(0, 0, 0, 0.65);
+            --shadow-float: 0 20px 44px rgba(0, 0, 0, 0.88);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            line-height: 1.65;
+            min-height: 100vh;
+            padding-bottom: 104px; /* فضا برای Bottom Navigation اندرویدی */
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        /* ==========================================================================
+           نوار بالای اپلیکیشن (App Bar) + دکمه نصب مستقیم وب‌اپ (PWA)
+           ========================================================================== */
+        .top-appbar {
+            background-color: var(--bg-surface-1);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        .appbar-inner {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .app-identity {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .app-squircle-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 15px;
+            background-color: var(--primary-container);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1.5px solid var(--primary);
+        }
+
+        .app-title-box h1 {
+            font-size: 1.02rem;
+            font-weight: 900;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+        }
+
+        .app-status-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .online-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .appbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* دکمه نصب وب‌اپ در هدر */
+        .pwa-install-chip {
+            display: none; /* وقتی قابل نصب باشد یا روی موبایل باشد فعال می‌شود */
+            background-color: var(--primary);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 8px 13px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            cursor: pointer;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.15s;
+        }
+
+        :root[data-theme="dark"] .pwa-install-chip {
+            color: #042f2e;
+        }
+
+        .pwa-install-chip:active {
+            transform: scale(0.96);
+        }
+
+        .icon-action-btn {
+            background-color: var(--bg-surface-2);
+            color: var(--text-main);
+            border: 1.5px solid var(--border-subtle);
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .icon-action-btn:hover {
+            border-color: var(--primary);
+            background-color: var(--bg-surface-3);
+        }
+
+        /* نوار پیشرفت تکمیل فرم */
+        .progress-strip {
+            height: 3px;
+            width: 100%;
+            background-color: var(--bg-surface-3);
+            overflow: hidden;
+        }
+
+        .progress-strip-fill {
+            height: 100%;
+            width: 25%;
+            background-color: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        /* ==========================================================================
+           بنر راهنمای نصب PWA روی کروم و اندروید
+           ========================================================================== */
+        .pwa-promo-banner {
+            max-width: 1040px;
+            margin: 14px auto 0;
+            padding: 0 16px;
+            display: none;
+        }
+
+        .pwa-promo-box {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            border: 1.5px solid var(--primary);
+            border-radius: 18px;
+            padding: 14px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .pwa-promo-text {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pwa-promo-btns {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ==========================================================================
+           نوار ناوبری پایین صفحه به سبک اپلیکیشن‌های اندروید (MD3 Bottom Bar)
+           ========================================================================== */
+        .bottom-nav-shell {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            background-color: var(--bg-surface-1);
+            border-top: 1px solid var(--border-subtle);
+            z-index: 250;
+            padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .bottom-nav-inner {
+            max-width: 640px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .bnav-item {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 8px;
+            border-radius: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .bnav-pill {
+            width: 58px;
+            height: 32px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.2s ease;
+        }
+
+        .bnav-item.active .bnav-pill {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+        }
+
+        .bnav-item.active {
+            color: var(--text-main);
+        }
+
+        .bnav-label {
+            font-size: 0.77rem;
+            font-weight: 800;
+        }
+
+        .bnav-badge {
+            position: absolute;
+            top: -3px;
+            left: 4px;
+            background-color: var(--primary);
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 999px;
+        }
+
+        :root[data-theme="dark"] .bnav-badge {
+            color: #042f2e;
+        }
+
+        /* ==========================================================================
+           کانتینر اصلی و کارت‌های Expressive Bento
+           ========================================================================== */
+        .app-main {
+            max-width: 1040px;
+            margin: 16px auto;
+            padding: 0 16px;
+        }
+
+        .screen-pane {
+            display: none;
+            animation: screenFade 0.22s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .screen-pane.active {
+            display: block;
+        }
+
+        @keyframes screenFade {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .expressive-card {
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: 24px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+
+        .card-top-bar {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            border-bottom: 1.5px solid var(--border-subtle);
+        }
+
+        .step-squircle {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
+
+        .card-top-titles h2 {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .card-top-titles p {
+            font-size: 0.79rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        /* ==========================================================================
+           گرید فیلدها و قرارگیری تگ‌ها دقیقاً جلوی عنوان
+           ========================================================================== */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 16px;
+        }
+
+        .col-12 { grid-column: span 12; }
+        .col-8 { grid-column: span 8; }
+        .col-6 { grid-column: span 6; }
+        .col-4 { grid-column: span 4; }
+
+        @media (max-width: 860px) {
+            .col-8, .col-6, .col-4 { grid-column: span 6; }
+        }
+
+        @media (max-width: 560px) {
+            .col-8, .col-6, .col-4 { grid-column: span 12; }
+            .expressive-card { padding: 18px 15px; border-radius: 20px; }
+        }
+
+        .field-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            position: relative;
+        }
+
+        /* چسبیدن تگ دقیقاً جلوی عنوان */
+        .label-inline {
+            font-size: 0.89rem;
+            font-weight: 800;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag-pill-req {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--danger);
+            background-color: var(--danger-container);
+            padding: 1px 8px;
+            border-radius: 7px;
+            line-height: 1.5;
+        }
+
+        .tag-pill-opt {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background-color: var(--bg-surface-3);
+            padding: 1px 8px;
+            border-radius: 7px;
+            line-height: 1.5;
+        }
+
+        .m3-input,
+        .m3-select,
+        .m3-textarea {
+            width: 100%;
+            background-color: var(--bg-surface-2);
+            color: var(--text-main);
+            border: 1.5px solid var(--border-strong);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 0.93rem;
+            font-weight: 600;
+            transition: all 0.15s ease;
+        }
+
+        .m3-input::placeholder,
+        .m3-textarea::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .m3-input:focus,
+        .m3-select:focus,
+        .m3-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: var(--bg-surface-1);
+            box-shadow: 0 0 0 3px var(--primary-container);
+        }
+
+        .m3-input[readonly] {
+            background-color: var(--bg-surface-3);
+            border-style: dashed;
+            color: var(--text-sec);
+            cursor: default;
+        }
+
+        /* ==========================================================================
+           منوی بازشونده سفارشی بخش‌های بیمارستان (Dropdown)
+           ========================================================================== */
+        .m3-dropdown {
+            position: relative;
+            width: 100%;
+        }
+
+        .m3-dropdown-btn {
+            width: 100%;
+            background-color: var(--bg-surface-2);
+            color: var(--text-main);
+            border: 1.5px solid var(--border-strong);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 0.93rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: right;
+            transition: all 0.15s ease;
+        }
+
+        .m3-dropdown-btn.is-empty {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .m3-dropdown.open .m3-dropdown-btn {
+            border-color: var(--primary);
+            background-color: var(--bg-surface-1);
+            box-shadow: 0 0 0 3px var(--primary-container);
+        }
+
+        .m3-dropdown-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            left: 0;
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--primary);
+            border-radius: 16px;
+            box-shadow: var(--shadow-float);
+            z-index: 160;
+            display: none;
+            overflow: hidden;
+        }
+
+        .m3-dropdown.open .m3-dropdown-panel {
+            display: block;
+        }
+
+        .dd-search-box {
+            padding: 10px;
+            background-color: var(--bg-surface-2);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .dd-search-input {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border-strong);
+            background-color: var(--bg-surface-1);
+            color: var(--text-main);
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        .dd-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .dd-list {
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 6px;
+        }
+
+        .dd-option {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.12s;
+        }
+
+        .dd-option:hover {
+            background-color: var(--bg-surface-3);
+        }
+
+        .dd-option.active {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            font-weight: 900;
+        }
+
+        /* ==========================================================================
+           سوییچ بیمه و منوی هوشمند خودآموز بیمه
+           ========================================================================== */
+        .m3-segmented {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: var(--bg-surface-2);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1.5px solid var(--border-strong);
+        }
+
+        .m3-seg-item input {
+            display: none;
+        }
+
+        .m3-seg-item span {
+            display: block;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 0.89rem;
+            font-weight: 800;
+            cursor: pointer;
+            color: var(--text-sec);
+            transition: all 0.15s;
+        }
+
+        .m3-seg-item input:checked + span {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        :root[data-theme="dark"] .m3-seg-item input:checked + span {
+            color: #042f2e;
+        }
+
+        .ins-smart-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .ins-input-holder {
+            position: relative;
+            flex: 1;
+        }
+
+        .btn-add-ins {
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            border: 1.5px solid var(--primary);
+            border-radius: 14px;
+            padding: 0 15px;
+            font-size: 0.84rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: all 0.15s;
+        }
+
+        .btn-add-ins:hover {
+            background-color: var(--primary);
+            color: #ffffff;
+        }
+
+        :root[data-theme="dark"] .btn-add-ins:hover {
+            color: #042f2e;
+        }
+
+        .ins-popup-menu {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            left: 0;
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--primary);
+            border-radius: 16px;
+            box-shadow: var(--shadow-float);
+            z-index: 170;
+            display: none;
+            overflow: hidden;
+        }
+
+        .ins-popup-menu.open {
+            display: block;
+        }
+
+        .ins-popup-head {
+            padding: 8px 12px;
+            background-color: var(--bg-surface-2);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.74rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ins-popup-list {
+            max-height: 210px;
+            overflow-y: auto;
+            padding: 6px;
+        }
+
+        .ins-row-option {
+            padding: 9px 12px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background-color 0.12s;
+        }
+
+        .ins-row-option:hover {
+            background-color: var(--bg-surface-3);
+        }
+
+        .ins-usage-badge {
+            font-size: 0.72rem;
+            font-weight: 800;
+            background-color: var(--secondary-container);
+            color: var(--on-secondary-container);
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .ins-del-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            width: 26px;
+            height: 26px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: 900;
+        }
+
+        .ins-del-btn:hover {
+            background-color: var(--danger-container);
+            color: var(--danger);
+        }
+
+        /* ==========================================================================
+           کارت‌های انتخاب رده شغلی (بخش دوم)
+           ========================================================================== */
+        .roles-bento-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 11px;
+        }
+
+        .role-tile {
+            position: relative;
+        }
+
+        .role-tile input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .role-tile-box {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 14px;
+            background-color: var(--bg-surface-2);
+            border: 1.5px solid var(--border-strong);
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.89rem;
+            font-weight: 800;
+            color: var(--text-main);
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .role-tile-box:hover {
+            border-color: var(--primary);
+            background-color: var(--bg-surface-3);
+        }
+
+        .role-check-squircle {
+            width: 22px;
+            height: 22px;
+            border-radius: 7px;
+            border: 2px solid var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: transparent;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+        }
+
+        .role-tile input:checked + .role-tile-box {
+            background-color: var(--primary-container);
+            border-color: var(--primary);
+            color: var(--on-primary-container);
+        }
+
+        .role-tile input:checked + .role-tile-box .role-check-squircle {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: #ffffff;
+        }
+
+        :root[data-theme="dark"] .role-tile input:checked + .role-tile-box .role-check-squircle {
+            color: #042f2e;
+        }
+
+        /* تگ‌های راهنمای شرح مساله */
+        .guide-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-bottom: 8px;
+        }
+
+        .guide-chip {
+            background-color: var(--secondary-container);
+            color: var(--on-secondary-container);
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        /* ==========================================================================
+           بلیط سریال منحصر‌به‌فرد در پایین صفحه (Ticket Stub UI)
+           ========================================================================== */
+        .serial-ticket-stub {
+            background-color: var(--bg-surface-1);
+            border: 2px dashed var(--primary);
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-top: 8px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .serial-ticket-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .serial-pulse {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-container);
+        }
+
+        .serial-code-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-family: monospace, 'Vazirmatn';
+            font-size: 1.04rem;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            direction: ltr;
+        }
+
+        .btn-action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-m3 {
+            border: none;
+            border-radius: 16px;
+            padding: 15px 24px;
+            font-size: 0.98rem;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.12s ease, background-color 0.15s ease;
+        }
+
+        .btn-m3:active {
+            transform: scale(0.98);
+        }
+
+        .btn-m3-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            flex: 2;
+            min-width: 230px;
+            box-shadow: var(--shadow-card);
+        }
+
+        :root[data-theme="dark"] .btn-m3-primary {
+            color: #042f2e;
+        }
+
+        .btn-m3-secondary {
+            background-color: var(--bg-surface-2);
+            color: var(--text-sec);
+            border: 1.5px solid var(--border-strong);
+            flex: 1;
+            min-width: 130px;
+        }
+
+        /* ==========================================================================
+           تب ۲ و ۳: آرشیو، خروجی اکسل و نمودارها
+           ========================================================================== */
+        .export-header-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1.5px solid var(--border-subtle);
+        }
+
+        .chip-btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip-btn {
+            padding: 9px 14px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            border-radius: 12px;
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chip-excel { background-color: #107c41; color: #ffffff; }
+        .chip-csv { background-color: var(--secondary-container); color: var(--on-secondary-container); }
+        .chip-demo { background-color: var(--tertiary-container); color: var(--on-tertiary-container); border-color: var(--tertiary); }
+
+        .table-shell {
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+        }
+
+        .table-scroll-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.m3-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+            min-width: 780px;
+        }
+
+        table.m3-table th {
+            background-color: var(--bg-surface-2);
+            color: var(--text-sec);
+            font-size: 0.8rem;
+            font-weight: 900;
+            padding: 14px 16px;
+            border-bottom: 1.5px solid var(--border-strong);
+            white-space: nowrap;
+        }
+
+        table.m3-table td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.87rem;
+            vertical-align: middle;
+        }
+
+        table.m3-table tr:hover td {
+            background-color: var(--bg-surface-2);
+        }
+
+        .serial-tag {
+            font-family: monospace, 'Vazirmatn';
+            font-weight: 900;
+            font-size: 0.82rem;
+            background-color: var(--primary-container);
+            color: var(--on-primary-container);
+            padding: 4px 10px;
+            border-radius: 8px;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .ward-pill {
+            background-color: var(--secondary-container);
+            color: var(--on-secondary-container);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        /* شاخص‌های آماری (KPI) */
+        .kpi-bento {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 860px) { .kpi-bento { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .kpi-bento { grid-template-columns: 1fr; } }
+
+        .kpi-tile {
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .kpi-tile .lbl { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
+        .kpi-tile .val { font-size: 1.65rem; font-weight: 900; color: var(--text-main); margin: 4px 0; }
+        .kpi-tile .sub { font-size: 0.76rem; font-weight: 800; color: var(--primary); }
+
+        .stat-bars-list {
+            display: flex;
+            flex-direction: column;
+            gap: 11px;
+            margin-top: 12px;
+        }
+
+        .stat-bar-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-bar-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.83rem;
+            font-weight: 800;
+        }
+
+        .stat-bar-track {
+            width: 100%;
+            height: 10px;
+            background-color: var(--bg-surface-3);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background-color: var(--primary);
+            border-radius: 999px;
+            transition: width 0.35s ease;
+        }
+
+        .stat-bar-fill.sec { background-color: var(--secondary); }
+
+        /* مودال نمایش رسید و راهنمای نصب */
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-bg.open { display: flex; }
+
+        .modal-sheet {
+            background-color: var(--bg-surface-1);
+            border: 1.5px solid var(--border-strong);
+            border-radius: 24px;
+            max-width: 660px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 22px;
+            box-shadow: var(--shadow-float);
+        }
+
+        .detail-cells {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 14px 0;
+        }
+
+        @media (max-width: 520px) { .detail-cells { grid-template-columns: 1fr; } }
+
+        .d-cell {
+            background-color: var(--bg-surface-2);
+            border: 1px solid var(--border-subtle);
+            padding: 10px 13px;
+            border-radius: 12px;
+        }
+
+        .d-cell .k { font-size: 0.74rem; color: var(--text-muted); font-weight: 700; }
+        .d-cell .v { font-size: 0.9rem; font-weight: 800; color: var(--text-main); margin-top: 2px; }
+
+        .toast-area {
+            position: fixed;
+            bottom: 92px;
+            left: 16px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast-pill {
+            background-color: var(--text-main);
+            color: var(--bg-surface-1);
+            padding: 12px 16px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            box-shadow: var(--shadow-float);
+        }
+
+        @media print {
+            body { background: #fff !important; color: #000 !important; padding: 0; }
+            .top-appbar, .bottom-nav-shell, .pwa-promo-banner, .btn-action-row, .export-header-row, .no-print { display: none !important; }
+            .expressive-card, .table-shell, .kpi-tile, .serial-ticket-stub {
+                box-shadow: none !important;
+                border: 1px solid #888 !important;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- نوار بالایی اپلیکیشن -->
+    <header class="top-appbar">
+        <div class="appbar-inner">
+            <div class="app-identity">
+                <div class="app-squircle-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                        <path d="M12 7v6"/><path d="M9 10h6"/>
+                    </svg>
+                </div>
+                <div class="app-title-box">
+                    <h1>سامانه پیگیری امور بیماران</h1>
+                    <div class="app-status-line">
+                        <span class="online-dot"></span>
+                        <span>نسخه وب‌اپلیکیشن قابل نصب (PWA) • آماده کار آفلاین</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="appbar-actions">
+                <!-- دکمه نصب وب‌اپ روی اندروید و کروم -->
+                <button type="button" class="pwa-install-chip" id="headerInstallBtn" onclick="triggerPWAInstall()" style="display:none !important;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                    <span>نصب اپ</span>
+                </button>
+
+                <button type="button" class="icon-action-btn" style="display:none !important;" title="چاپ رسمی">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                </button>
+
+                <button type="button" class="icon-action-btn" onclick="toggleAppTheme()" title="تغییر تم تاریک AMOLED / روشن">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="progress-strip">
+            <div class="progress-strip-fill" id="formProgressFill"></div>
+        </div>
+    </header>
+
+    <!-- بنر نصب مستقیم وب‌اپ در صورت باز شدن در مرورگر کروم -->
+    <div class="pwa-promo-banner" id="pwaPromoBanner" style="display:none !important;">
+        <div class="pwa-promo-box">
+            <div class="pwa-promo-text">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+                <div>
+                    <div style="font-weight: 900; font-size: 0.88rem;">نصب به عنوان اپلیکیشن روی اندروید و کروم</div>
+                    <div style="font-size: 0.76rem; opacity: 0.9;">بدون نیاز به فایل APK، این سامانه را با آیکون اختصاصی و تمام‌صفحه روی گوشی نصب کنید.</div>
+                </div>
+            </div>
+            <div class="pwa-promo-btns">
+                <button type="button" class="chip-btn" style="background: var(--primary); color: #fff;" onclick="triggerPWAInstall()">نصب فوری وب‌اپ</button>
+                <button type="button" class="chip-btn" style="background: transparent; color: inherit;" onclick="document.getElementById('pwaPromoBanner').style.display='none'">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <main class="app-main">
+
+        <!-- ==========================================================================
+             صفحه اول: فرم ثبت شکایت
+             ========================================================================== -->
+        <section id="paneForm" class="screen-pane active">
+            <form id="complaintForm" autocomplete="off" oninput="updateFormProgress()">
+
+                <!-- کارت ۱: مشخصات بیمار و مراجعه -->
+                <div class="expressive-card">
+                    <div class="card-top-bar">
+                        <div class="step-squircle">۱</div>
+                        <div class="card-top-titles">
+                            <h2>بخش اول: مشخصات بیمار و اطلاعات مراجعه</h2>
+                            <p>انتخاب بخش بیمارستان، مشخصات فردی، وضعیت بیمه و اطلاعات تماس</p>
+                        </div>
+                    </div>
+
+                    <div class="bento-grid">
+                        <!-- منوی بازشونده ۱۴ بخش بیمارستان -->
+                        <div class="field-cell col-4">
+                            <label class="label-inline">
+                                <span>نام بخش</span>
+                                <span class="tag-pill-req">الزامی</span>
+                            </label>
+                            <input type="hidden" id="wardHiddenInput" name="ward" required>
+                            <div class="m3-dropdown" id="wardDropdownBox">
+                                <button type="button" class="m3-dropdown-btn is-empty" id="wardTriggerBtn" onclick="toggleWardMenu()">
+                                    <span id="wardSelectedLabel">انتخاب بخش بیمارستان...</span>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="6 9 12 15 18 9"/></svg>
+                                </button>
+                                <div class="m3-dropdown-panel">
+                                    <div class="dd-search-box">
+                                        <input type="text" id="wardSearchField" class="dd-search-input" placeholder="جستجوی نام بخش..." oninput="renderWardList(this.value)">
+                                    </div>
+                                    <div class="dd-list" id="wardOptionsContainer"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="patientName">
+                                <span>نام و نام خانوادگی بیمار</span>
+                                <span class="tag-pill-opt">در صورت تمایل</span>
+                            </label>
+                            <input type="text" id="patientName" name="patientName" class="m3-input" placeholder="مثال: علی محمدی">
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="birthDate">
+                                <span>تاریخ تولد</span>
+                            </label>
+                            <input type="date" id="birthDate" name="birthDate" class="m3-input" placeholder="مثال: ۱۳۶۴/۰۳/۱۵">
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="maritalStatus">
+                                <span>وضعیت تاهل</span>
+                            </label>
+                            <select id="maritalStatus" name="maritalStatus" class="m3-select">
+                                <option value="">انتخاب کنید...</option>
+                                <option value="مجرد">مجرد</option>
+                                <option value="متاهل">متاهل</option>
+                            </select>
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="occupation">
+                                <span>شغل</span>
+                            </label>
+                            <input type="text" id="occupation" name="occupation" class="m3-input" placeholder="شغل بیمار یا مراجعه‌کننده">
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="education">
+                                <span>میزان تحصیلات</span>
+                            </label>
+                            <select id="education" name="education" class="m3-select">
+                                <option value="">انتخاب کنید...</option>
+                                <option value="زیر دیپلم">زیر دیپلم</option>
+                                <option value="دیپلم">دیپلم</option>
+                                <option value="فوق دیپلم">فوق دیپلم / کاردانی</option>
+                                <option value="لیسانس">لیسانس / کارشناسی</option>
+                                <option value="فوق لیسانس">فوق لیسانس / کارشناسی ارشد</option>
+                                <option value="دکتری و بالاتر">دکتری و بالاتر</option>
+                            </select>
+                        </div>
+
+                        <!-- تاریخ مراجعه و تاریخ اتفاق: بدون دکمه هم‌اکنون و غیراجباری -->
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="visitDate">
+                                <span>تاریخ مراجعه یا بستری</span>
+                            </label>
+                            <input type="date" id="visitDate" name="visitDate" class="m3-input" placeholder="مثال: ۱۴۰۵/۰۸/۰۶">
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="registerDateTime">
+                                <span>تاریخ و ساعت ثبت</span>
+                                <span class="tag-pill-opt">خودکار</span>
+                            </label>
+                            <input type="text" id="registerDateTime" name="registerDateTime" class="m3-input" readonly>
+                        </div>
+
+                        <div class="field-cell col-4">
+                            <label class="label-inline" for="incidentDateTime">
+                                <span>تاریخ و ساعت حدودی اتفاق</span>
+                            </label>
+                            <input type="datetime-local" id="incidentDateTime" name="incidentDateTime" class="m3-input" placeholder="مثال: ۱۴۰۵/۰۸/۰۶ ساعت ۱۰:۳۰">
+                        </div>
+
+                        <div class="field-cell col-12">
+                            <label class="label-inline" for="visitReason">
+                                <span>علت مراجعه</span>
+                            </label>
+                            <input type="text" id="visitReason" name="visitReason" class="m3-input" placeholder="علت مراجعه یا بستری در بیمارستان را وارد کنید">
+                        </div>
+
+                        <!-- وضعیت بیمه -->
+                        <div class="field-cell col-4">
+                            <label class="label-inline">
+                                <span>بیمه</span>
+                            </label>
+                            <div class="m3-segmented">
+                                <label class="m3-seg-item">
+                                    <input type="radio" name="hasInsurance" value="دارد" onchange="toggleInsuranceSection(true)">
+                                    <span>دارد</span>
+                                </label>
+                                <label class="m3-seg-item">
+                                    <input type="radio" name="hasInsurance" value="ندارد" onchange="toggleInsuranceSection(false)" checked>
+                                    <span>ندارد</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- منوی هوشمند نوع بیمه (خالی در ابتدا + سرچ در حین نوشتن + دکمه افزودن به منو + مرتب‌سازی بر اساس میزان استفاده) -->
+                        <div class="field-cell col-8" id="insuranceSmartWrap" style="display: none;">
+                            <label class="label-inline" for="insuranceInput">
+                                <span>نوع بیمه</span>
+                                <span class="tag-pill-opt">جستجو در حین تایپ و مرتب‌سازی بر اساس میزان استفاده</span>
+                            </label>
+                            <div class="ins-smart-wrap">
+                                <div class="ins-input-holder" id="insComboHolder">
+                                    <input type="text" id="insuranceInput" name="insuranceType" class="m3-input" placeholder="نام بیمه را تایپ کنید یا از منو انتخاب نمایید..." onfocus="openInsPopup()" oninput="renderInsPopup(this.value)">
+                                    <div class="ins-popup-menu" id="insPopupMenu">
+                                        <div class="ins-popup-head">
+                                            <span>فهرست بیمه‌های ذخیره‌شده (مرتب‌شده بر اساس بیشترین استفاده)</span>
+                                        </div>
+                                        <div class="ins-popup-list" id="insPopupList"></div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-add-ins" onclick="addInsuranceToMenu()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    <span>افزودن به منو</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="field-cell col-6">
+                            <label class="label-inline" for="formFillerName">
+                                <span>نام تکمیل‌کننده فرم</span>
+                                <span class="tag-pill-req">الزامی</span>
+                            </label>
+                            <input type="text" id="formFillerName" name="formFillerName" class="m3-input" placeholder="نام و نام خانوادگی تکمیل‌کننده" required>
+                        </div>
+
+                        <div class="field-cell col-6">
+                            <label class="label-inline" for="phone">
+                                <span>تلفن</span>
+                                <span class="tag-pill-opt">در صورت تمایل</span>
+                            </label>
+                            <input type="tel" id="phone" name="phone" class="m3-input" placeholder="۰۹۱۱XXXXXXX" dir="ltr" style="text-align: right;">
+                        </div>
+
+                        <div class="field-cell col-12">
+                            <label class="label-inline" for="address">
+                                <span>نشانی</span>
+                                <span class="tag-pill-opt">در صورت تمایل</span>
+                            </label>
+                            <input type="text" id="address" name="address" class="m3-input" placeholder="نشانی محل سکونت">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- کارت ۲: رده شغلی فرد مورد نارضایتی -->
+                <div class="expressive-card">
+                    <div class="card-top-bar">
+                        <div class="step-squircle">۲</div>
+                        <div class="card-top-titles">
+                            <h2>
+                                <span>بخش دوم: رده شغلی فرد مورد نارضایتی</span>
+                                <span class="tag-pill-req">الزامی</span>
+                            </h2>
+                            <p>امکان انتخاب یک یا چند رده شغلی مرتبط با موضوع شکایت</p>
+                        </div>
+                    </div>
+
+                    <div class="roles-bento-grid" id="rolesGridBox"></div>
+                </div>
+
+                <!-- کارت ۳: شرح مساله و پیشنهاد -->
+                <div class="expressive-card">
+                    <div class="card-top-bar">
+                        <div class="step-squircle">۳</div>
+                        <div class="card-top-titles">
+                            <h2>بخش بعدی: شرح مساله و پیشنهاد</h2>
+                            <p>ثبت جزئیات کامل جهت بررسی دقیق در واحد رسیدگی به شکایات</p>
+                        </div>
+                    </div>
+
+                    <div class="bento-grid">
+                        <div class="field-cell col-12">
+                            <label class="label-inline" for="issueDescription">
+                                <span>شرح مساله</span>
+                                <span class="tag-pill-req">الزامی</span>
+                            </label>
+                            <div class="guide-chips">
+                                <span class="guide-chip">چه اتفاقی؟</span>
+                                <span class="guide-chip">در چه تاریخی؟</span>
+                                <span class="guide-chip">چه کسانی نقش داشتند؟</span>
+                                <span class="guide-chip">چطور مورد پیگیری قرار گرفت؟</span>
+                            </div>
+                            <textarea id="issueDescription" name="issueDescription" rows="5" class="m3-textarea" placeholder="تا حد ممکن با بیشترین جزئیات پر شود..." required></textarea>
+                        </div>
+
+                        <div class="field-cell col-12">
+                            <label class="label-inline" for="suggestion">
+                                <span>پیشنهاد شما؟</span>
+                                <span class="tag-pill-opt">اختیاری</span>
+                            </label>
+                            <textarea id="suggestion" name="suggestion" rows="3" class="m3-textarea" placeholder="پیشنهاد یا راهکار خود را جهت بهبود خدمات بنویسید..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- بلیط سریال منحصر‌به‌فرد در پایین صفحه -->
+                <div class="serial-ticket-stub">
+                    <div class="serial-ticket-info">
+                        <span class="serial-pulse"></span>
+                        <div>
+                            <div style="font-weight: 900; font-size: 0.88rem;">کد / سریال منحصر‌به‌فرد این گزارش</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">اختصاص خودکار به پرونده و درج در خروجی اکسل</div>
+                        </div>
+                    </div>
+                    <div class="serial-code-pill">
+                        <span id="bottomSerialLabel">CMP-1405-0001</span>
+                        <button type="button" class="chip-btn" style="background: var(--bg-surface-1); color: var(--text-main); padding: 4px 10px; font-size: 0.74rem;" onclick="copyCurrentSerial()">کپی</button>
+                    </div>
+                </div>
+
+                <div class="btn-action-row">
+                    <button type="submit" class="btn-m3 btn-m3-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        <span>ثبت نهایی</span>
+                    </button>
+                    <button type="button" class="btn-m3 btn-m3-secondary" onclick="resetFormState()">
+                        <span>پاک‌سازی فرم</span>
+                    </button>
+                </div>
+
+            </form>
+        </section>
+
+        <!-- ==========================================================================
+             صفحه دوم: آرشیو گزارش‌ها و خروجی اکسل
+             ========================================================================== -->
+        <section id="paneArchive" class="screen-pane">
+            <div class="expressive-card">
+                <div class="export-header-row">
+                    <div>
+                        <h2 style="font-size: 1.05rem; font-weight: 900;">فهرست شکایات ثبت‌شده و خروجی اکسل</h2>
+                        <p style="font-size: 0.78rem; color: var(--text-muted);">جستجو، فیلتر بر اساس بخش و دریافت فایل اکسل استاندارد</p>
+                    </div>
+                    <div class="chip-btn-group">
+                        <button type="button" class="chip-btn chip-excel" onclick="downloadExcelXLSX()">
+                            <span>خروجی اکسل (.xlsx)</span>
+                        </button>
+                        <button type="button" class="chip-btn chip-csv" onclick="downloadExcelCSV()">
+                            <span>خروجی اکسل آفلاین (.csv)</span>
+                        </button>
+                        <button type="button" class="chip-btn chip-demo" onclick="addSampleData()">
+                            <span>+ افزودن داده نمونه</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bento-grid">
+                    <div class="field-cell col-4">
+                        <label class="label-inline">جستجو در گزارش‌ها</label>
+                        <input type="text" id="searchFilterInput" class="m3-input" placeholder="سریال، نام بیمار، متن شکایت..." oninput="renderArchiveTable()">
+                    </div>
+                    <div class="field-cell col-4">
+                        <label class="label-inline">فیلتر بخش بیمارستان</label>
+                        <select id="wardFilterSelect" class="m3-select" onchange="renderArchiveTable()">
+                            <option value="ALL">همه بخش‌ها (۱۴ بخش)</option>
+                        </select>
+                    </div>
+                    <div class="field-cell col-4">
+                        <label class="label-inline">فیلتر رده شغلی</label>
+                        <select id="roleFilterSelect" class="m3-select" onchange="renderArchiveTable()">
+                            <option value="ALL">همه رده‌های شغلی</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-shell">
+                <div class="table-scroll-wrap">
+                    <table class="m3-table">
+                        <thead>
+                            <tr>
+                                <th>سریال گزارش</th>
+                                <th>بخش</th>
+                                <th>نام بیمار / تکمیل‌کننده</th>
+                                <th>بیمه</th>
+                                <th>رده شغلی مورد شکایت</th>
+                                <th>زمان ثبت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="archiveTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================================================
+             صفحه سوم: داشبورد آمارگیری و تحلیل
+             ========================================================================== -->
+        <section id="paneStats" class="screen-pane">
+            <div class="expressive-card" style="padding: 18px 22px;">
+                <div class="export-header-row" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                    <div>
+                        <h2 style="font-size: 1.05rem; font-weight: 900;">داشبورد آمارگیری و تحلیل شکایات بیمارستان</h2>
+                        <p style="font-size: 0.78rem; color: var(--text-muted);">تحلیل لحظه‌ای به تفکیک ۱۴ بخش بیمارستان و رده‌های شغلی</p>
+                    </div>
+                    <div class="chip-btn-group">
+                        <button type="button" class="chip-btn chip-excel" onclick="downloadStatsExcel()">
+                            <span>خروجی اکسل جداول آماری (.xlsx)</span>
+                        </button>
+                        <button type="button" class="chip-btn chip-csv" style="display:none !important;">
+                            <span>چاپ گزارش آماری</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="kpi-bento">
+                <div class="kpi-tile">
+                    <div class="lbl">کل شکایات ثبت‌شده</div>
+                    <div class="val" id="kpiTotalVal">0</div>
+                    <div class="sub">پرونده دارای کد سریال</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="lbl">بخش دارای بیشترین گزارش</div>
+                    <div class="val" id="kpiTopWardVal" style="font-size: 1.2rem;">—</div>
+                    <div class="sub" id="kpiTopWardSub">بدون داده</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="lbl">پرتکرارترین رده شغلی</div>
+                    <div class="val" id="kpiTopRoleVal" style="font-size: 1.2rem;">—</div>
+                    <div class="sub" id="kpiTopRoleSub">بدون داده</div>
+                </div>
+                <div class="kpi-tile">
+                    <div class="lbl">مراجعین دارای پوشش بیمه</div>
+                    <div class="val" id="kpiInsuredVal">0%</div>
+                    <div class="sub" id="kpiInsuredSub">از کل پرونده‌ها</div>
+                </div>
+            </div>
+
+            <div class="bento-grid">
+                <div class="expressive-card col-6" style="margin-bottom: 0;">
+                    <h3 style="font-size: 0.96rem; font-weight: 900; margin-bottom: 4px;">آمار تفکیکی بخش‌های بیمارستان (۱۴ بخش)</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">تعداد و درصد شکایات ثبت‌شده در هر بخش</p>
+                    <div class="stat-bars-list" id="wardStatsContainer"></div>
+                </div>
+
+                <div class="expressive-card col-6" style="margin-bottom: 0;">
+                    <h3 style="font-size: 0.96rem; font-weight: 900; margin-bottom: 4px;">آمار تفکیکی رده شغلی فرد مورد نارضایتی</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted);">توزیع فراوانی برای هر رده شغلی</p>
+                    <div class="stat-bars-list" id="roleStatsContainer"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- نوار ناوبری پایین صفحه به سبک اندروید (Bottom Navigation Bar) -->
+    <nav class="bottom-nav-shell no-print">
+        <div class="bottom-nav-inner">
+            <button type="button" class="bnav-item active" onclick="switchScreen('paneForm', this)">
+                <div class="bnav-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </div>
+                <span class="bnav-label">ثبت شکایت</span>
+            </button>
+
+            <button type="button" class="bnav-item" onclick="switchScreen('paneArchive', this)">
+                <div class="bnav-pill">
+                    <span class="bnav-badge" id="navCountBadge">0</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg>
+                </div>
+                <span class="bnav-label">گزارش‌ها و اکسل</span>
+            </button>
+
+            <button type="button" class="bnav-item" onclick="switchScreen('paneStats', this)">
+                <div class="bnav-pill">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/></svg>
+                </div>
+                <span class="bnav-label">آمارگیری</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- مودال نمایش جزئیات گزارش و راهنمای نصب -->
+    <div class="modal-bg" id="appModal" onclick="if(event.target===this) closeAppModal()">
+        <div class="modal-sheet">
+            <div class="export-header-row">
+                <div>
+                    <h3 style="font-size: 1.02rem; font-weight: 900;" id="modalTitle">جزئیات گزارش</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);" id="modalSub"></p>
+                </div>
+                <button type="button" class="icon-action-btn" onclick="closeAppModal()">✕</button>
+            </div>
+            <div id="modalBody"></div>
+            <div class="btn-action-row no-print" style="margin-top: 18px;">
+                <button type="button" class="btn-m3 btn-m3-primary" style="display:none !important;">چاپ رسمی</button>
+                <button type="button" class="btn-m3 btn-m3-secondary" onclick="closeAppModal()">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-area" id="toastArea"></div>
+
+    <script>
+        /* ==========================================================================
+           ثبت Service Worker و مدیریت نصب وب‌اپ (PWA) روی اندروید و کروم
+           ========================================================================== */
+        let deferredInstallPrompt = null;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            });
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+            document.getElementById('headerInstallBtn').style.display = 'inline-flex';
+            document.getElementById('pwaPromoBanner').style.display = 'block';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+            document.getElementById('headerInstallBtn').style.display = 'none';
+            document.getElementById('pwaPromoBanner').style.display = 'none';
+            showToast('وب‌اپلیکیشن با موفقیت روی دستگاه شما نصب شد!');
+        });
+
+        function triggerPWAInstall() {
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.then(() => {
+                    deferredInstallPrompt = null;
+                });
+            } else {
+                // نمایش راهنمای نصب دستی در کروم اندروید یا دسکتاپ
+                document.getElementById('modalTitle').textContent = 'راهنمای نصب وب‌اپلیکیشن در اندروید و کروم';
+                document.getElementById('modalSub').textContent = 'نصب تمام‌صفحه با آیکون اختصاصی روی صفحه اصلی گوشی';
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="d-cell" style="margin-bottom: 10px;">
+                        <div class="k">در مرورگر کروم گوشی اندروید (Chrome Android)</div>
+                        <div class="v">روی علامت سه‌نقطه (⋮) در گوشه بالای مرورگر کروم بزنید و گزینه <strong>«Install app» (نصب برنامه)</strong> یا <strong>«Add to Home screen»</strong> را انتخاب کنید.</div>
+                    </div>
+                    <div class="d-cell">
+                        <div class="k">در مرورگر کروم کامپیوتر (Chrome Desktop)</div>
+                        <div class="v">روی آیکون نصب (مانیتور کوچک همراه با فلش) در سمت راست نوار آدرس (Address Bar) کلیک کنید و گزینه <strong>Install</strong> را بزنید.</div>
+                    </div>
+                `;
+                document.getElementById('appModal').classList.add('open');
+            }
+        }
+
+        /* ==========================================================================
+           تعاریف پایه: ۱۴ بخش بیمارستان و ۷ رده شغلی
+           ========================================================================== */
+        const WARDS = [
+            "بخش ۱", "بخش ۲", "بخش ۳", "بخش ۴",
+            "آی‌سی‌یو", "سی‌سی‌یو", "پست سی‌سی‌یو", "پست سی‌سی‌یو ستاره‌دار",
+            "اطفال", "نوزادان", "زایشگاه", "آی‌سی‌یو قلب",
+            "اورژانس", "درمانگاه"
+        ];
+
+        const ROLES = [
+            "پزشک",
+            "پرستار",
+            "کمک بهیار",
+            "پرسنل اداری (پذیرش، ترخیص، ...)",
+            "پرسنل آشپزخانه",
+            "پرسنل خدماتی",
+            "نگهبان"
+        ];
+
+        const KEY_RECORDS = "HOSP_PWA_COMPLAINTS_V4";
+        const KEY_SEQ = "HOSP_PWA_SEQ_V4";
+        const KEY_INS_MENU = "HOSP_PWA_INSURANCE_MENU_V4";
+
+        let records = [];
+        let insuranceList = []; // [{ name, count }]
+        let currentSerial = "";
+
+        /* ==========================================================================
+           تاریخ شمسی و تولید سریال یکتا
+           ========================================================================== */
+        function toEnDigits(s) {
+            return String(s).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+        }
+
+        function getPersianNow() {
+            const now = new Date();
+            const y = new Intl.DateTimeFormat('fa-IR', { year: 'numeric' }).format(now);
+            const m = new Intl.DateTimeFormat('fa-IR', { month: '2-digit' }).format(now);
+            const d = new Intl.DateTimeFormat('fa-IR', { day: '2-digit' }).format(now);
+            const t = new Intl.DateTimeFormat('fa-IR', { hour: '2-digit', minute: '2-digit' }).format(now);
+            return {
+                fullText: `${y}/${m}/${d} - ساعت ${t}`,
+                ymEn: toEnDigits(`${y}${m}`)
+            };
+        }
+
+        function createSerial() {
+            const { ymEn } = getPersianNow();
+            const seq = parseInt(localStorage.getItem(KEY_SEQ) || "100", 10) + 1;
+            const chk = Math.floor(10 + Math.random() * 89);
+            return `CMP-${ymEn}-${String(seq).padStart(4, '0')}-${chk}`;
+        }
+
+        function refreshSerialAndTime() {
+            currentSerial = createSerial();
+            document.getElementById('bottomSerialLabel').textContent = currentSerial;
+            document.getElementById('registerDateTime').value = getPersianNow().fullText;
+        }
+
+        function copyCurrentSerial() {
+            navigator.clipboard?.writeText(currentSerial);
+            showToast(`سریال ${currentSerial} کپی شد`);
+        }
+
+        /* ==========================================================================
+           منوی بازشونده ۱۴ بخش بیمارستان
+           ========================================================================== */
+        function initWardMenu() {
+            renderWardList("");
+            const sel = document.getElementById('wardFilterSelect');
+            WARDS.forEach(w => {
+                const o = document.createElement('option');
+                o.value = w;
+                o.textContent = w;
+                sel.appendChild(o);
+            });
+        }
+
+        function renderWardList(q) {
+            const box = document.getElementById('wardOptionsContainer');
+            const selected = document.getElementById('wardHiddenInput').value;
+            const cleanQ = (q || "").trim().toLowerCase();
+            const filtered = WARDS.filter(w => w.toLowerCase().includes(cleanQ));
+
+            if (filtered.length === 0) {
+                box.innerHTML = `<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.82rem;">بخشی یافت نشد</div>`;
+                return;
+            }
+
+            box.innerHTML = filtered.map(w => `
+                <div class="dd-option ${w === selected ? 'active' : ''}" onclick="chooseWard('${w}')">
+                    <span>${w}</span>
+                    ${w === selected ? '<span>✓</span>' : ''}
+                </div>
+            `).join('');
+        }
+
+        function toggleWardMenu() {
+            const box = document.getElementById('wardDropdownBox');
+            const open = box.classList.contains('open');
+            if (open) {
+                box.classList.remove('open');
+            } else {
+                box.classList.add('open');
+                const inp = document.getElementById('wardSearchField');
+                inp.value = '';
+                renderWardList('');
+                setTimeout(() => inp.focus(), 40);
+            }
+        }
+
+        function chooseWard(w) {
+            document.getElementById('wardHiddenInput').value = w;
+            document.getElementById('wardSelectedLabel').textContent = w;
+            document.getElementById('wardTriggerBtn').classList.remove('is-empty');
+            document.getElementById('wardDropdownBox').classList.remove('open');
+            renderWardList('');
+            updateFormProgress();
+        }
+
+        /* ==========================================================================
+           منوی هوشمند بیمه (خالی در ابتدا + سرچ در حین نوشتن + دکمه افزودن + مرتب‌سازی بر اساس میزان استفاده)
+           ========================================================================== */
+        function loadInsuranceMenu() {
+            try {
+                const raw = localStorage.getItem(KEY_INS_MENU);
+                insuranceList = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                insuranceList = [];
+            }
+        }
+
+        function saveInsuranceMenu() {
+            insuranceList.sort((a, b) => b.count - a.count);
+            localStorage.setItem(KEY_INS_MENU, JSON.stringify(insuranceList));
+        }
+
+        function toggleInsuranceSection(hasIns) {
+            const wrap = document.getElementById('insuranceSmartWrap');
+            const inp = document.getElementById('insuranceInput');
+            if (hasIns) {
+                wrap.style.display = 'flex';
+                inp.value = '';
+                renderInsPopup('');
+            } else {
+                wrap.style.display = 'none';
+                inp.value = '';
+                closeInsPopup();
+            }
+        }
+
+        function openInsPopup() {
+            document.getElementById('insPopupMenu').classList.add('open');
+            renderInsPopup(document.getElementById('insuranceInput').value);
+        }
+
+        function closeInsPopup() {
+            document.getElementById('insPopupMenu')?.classList.remove('open');
+        }
+
+        function renderInsPopup(query) {
+            const listEl = document.getElementById('insPopupList');
+            const q = (query || '').trim().toLowerCase();
+            const sorted = [...insuranceList].sort((a, b) => b.count - a.count);
+            const matched = sorted.filter(x => x.name.toLowerCase().includes(q));
+
+            if (insuranceList.length === 0) {
+                listEl.innerHTML = `
+                    <div style="padding: 14px; text-align: center; font-size: 0.82rem; color: var(--text-muted);">
+                        فهرست منوی بیمه خالی است.<br>نام بیمه را تایپ کرده و دکمه <strong>«+ افزودن به منو»</strong> را بزنید.
+                    </div>
+                `;
+                return;
+            }
+
+            if (matched.length === 0) {
+                listEl.innerHTML = `
+                    <div style="padding: 14px; text-align: center; font-size: 0.82rem; color: var(--text-muted);">
+                        موردی مشابه «${escapeHtml(query)}» یافت نشد.<br>با زدن <strong>«+ افزودن به منو»</strong> آن را اضافه کنید.
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = matched.map(item => `
+                <div class="ins-row-option" onclick="pickInsurance('${escapeAttr(item.name)}')">
+                    <span style="font-weight: 800; font-size: 0.9rem;">${escapeHtml(item.name)}</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span class="ins-usage-badge">${item.count} بار استفاده</span>
+                        <button type="button" class="ins-del-btn" onclick="event.stopPropagation(); deleteInsItem('${escapeAttr(item.name)}')">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addInsuranceToMenu() {
+            const inp = document.getElementById('insuranceInput');
+            const name = (inp.value || '').trim();
+            if (!name) {
+                showToast('لطفاً ابتدا نام بیمه را در کادر بنویسید', true);
+                inp.focus();
+                return;
+            }
+            const found = insuranceList.find(x => x.name === name);
+            if (found) {
+                found.count += 1;
+                showToast(`امتیاز استفاده «${name}» افزایش یافت`);
+            } else {
+                insuranceList.push({ name, count: 1 });
+                showToast(`بیمه «${name}» به فهرست منو اضافه شد`);
+            }
+            saveInsuranceMenu();
+            renderInsPopup(name);
+            openInsPopup();
+        }
+
+        function pickInsurance(name) {
+            document.getElementById('insuranceInput').value = name;
+            closeInsPopup();
+        }
+
+        function bumpInsuranceUsage(name) {
+            const clean = (name || '').trim();
+            if (!clean || clean === 'ندارد' || clean === 'ثبت نشده') return;
+            const found = insuranceList.find(x => x.name === clean);
+            if (found) found.count += 1;
+            else insuranceList.push({ name: clean, count: 1 });
+            saveInsuranceMenu();
+        }
+
+        function deleteInsItem(name) {
+            insuranceList = insuranceList.filter(x => x.name !== name);
+            saveInsuranceMenu();
+            renderInsPopup(document.getElementById('insuranceInput').value);
+        }
+
+        /* ==========================================================================
+           رندر رده‌های شغلی و محاسبه درصد پیشرفت فرم
+           ========================================================================== */
+        function initRolesGrid() {
+            const box = document.getElementById('rolesGridBox');
+            box.innerHTML = ROLES.map(r => `
+                <label class="role-tile">
+                    <input type="checkbox" name="staffRole" value="${r}" onchange="updateFormProgress()">
+                    <span class="role-tile-box">
+                        <span class="role-check-squircle">✓</span>
+                        <span>${r}</span>
+                    </span>
+                </label>
+            `).join('');
+
+            const sel = document.getElementById('roleFilterSelect');
+            ROLES.forEach(r => {
+                const o = document.createElement('option');
+                o.value = r;
+                o.textContent = r;
+                sel.appendChild(o);
+            });
+        }
+
+        function updateFormProgress() {
+            let done = 0;
+            if (document.getElementById('wardHiddenInput').value) done += 25;
+            if ((document.getElementById('formFillerName').value || '').trim()) done += 25;
+            if (document.querySelectorAll('input[name="staffRole"]:checked').length > 0) done += 25;
+            if ((document.getElementById('issueDescription').value || '').trim()) done += 25;
+            document.getElementById('formProgressFill').style.width = `${Math.max(10, done)}%`;
+        }
+
+        /* ==========================================================================
+           ذخیره و مدیریت پرونده‌ها
+           ========================================================================== */
+        function loadRecords() {
+            try {
+                const raw = localStorage.getItem(KEY_RECORDS);
+                records = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                records = [];
+            }
+            syncViews();
+        }
+
+        function saveRecords() {
+            localStorage.setItem(KEY_RECORDS, JSON.stringify(records));
+            syncViews();
+        }
+
+        function syncViews() {
+            document.getElementById('navCountBadge').textContent = records.length;
+            renderArchiveTable();
+            renderStatsDashboard();
+        }
+
+        function resetFormState() {
+            document.getElementById('complaintForm').reset();
+            document.getElementById('wardHiddenInput').value = '';
+            document.getElementById('wardSelectedLabel').textContent = 'انتخاب بخش بیمارستان...';
+            document.getElementById('wardTriggerBtn').classList.add('is-empty');
+            toggleInsuranceSection(false);
+            refreshSerialAndTime();
+            updateFormProgress();
+            showToast('فرم پاک‌سازی شد');
+        }
+
+        document.getElementById('complaintForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const ward = document.getElementById('wardHiddenInput').value;
+            if (!ward) {
+                showToast('لطفاً «نام بخش» را انتخاب کنید', true);
+                toggleWardMenu();
+                return;
+            }
+
+            const chosenRoles = Array.from(document.querySelectorAll('input[name="staffRole"]:checked')).map(c => c.value);
+            if (chosenRoles.length === 0) {
+                showToast('لطفاً حداقل یک «رده شغلی» در بخش دوم انتخاب کنید', true);
+                return;
+            }
+
+            const fd = new FormData(this);
+            const hasIns = fd.get('hasInsurance') || 'ندارد';
+            const insType = hasIns === 'دارد' ? ((fd.get('insuranceType') || '').trim() || 'ثبت نشده') : 'ندارد';
+
+            if (hasIns === 'دارد') {
+                bumpInsuranceUsage(insType);
+            }
+
+            const nextSeq = parseInt(localStorage.getItem(KEY_SEQ) || "100", 10) + 1;
+            localStorage.setItem(KEY_SEQ, String(nextSeq));
+
+            const item = {
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                serial: currentSerial,
+                ward,
+                patientName: (fd.get('patientName') || '').trim() || 'ناشناس (ثبت نشده)',
+                birthDate: (fd.get('birthDate') || '').trim() || '—',
+                maritalStatus: fd.get('maritalStatus') || '—',
+                occupation: (fd.get('occupation') || '').trim() || '—',
+                education: fd.get('education') || '—',
+                visitDate: (fd.get('visitDate') || '').trim() || '—',
+                registerDateTime: fd.get('registerDateTime') || getPersianNow().fullText,
+                incidentDateTime: (fd.get('incidentDateTime') || '').trim() || '—',
+                visitReason: (fd.get('visitReason') || '').trim() || '—',
+                hasInsurance: hasIns,
+                insuranceType: insType,
+                formFillerName: (fd.get('formFillerName') || '').trim(),
+                phone: (fd.get('phone') || '').trim() || '—',
+                address: (fd.get('address') || '').trim() || '—',
+                staffRoles: chosenRoles,
+                issueDescription: (fd.get('issueDescription') || '').trim(),
+                suggestion: (fd.get('suggestion') || '').trim() || '—'
+            };
+
+            records.unshift(item);
+            saveRecords();
+            openRecordModal(item.id, true);
+
+            this.reset();
+            document.getElementById('wardHiddenInput').value = '';
+            document.getElementById('wardSelectedLabel').textContent = 'انتخاب بخش بیمارستان...';
+            document.getElementById('wardTriggerBtn').classList.add('is-empty');
+            toggleInsuranceSection(false);
+            refreshSerialAndTime();
+            updateFormProgress();
+        });
+
+        /* ==========================================================================
+           جدول آرشیو و مودال جزئیات
+           ========================================================================== */
+        function getFilteredList() {
+            const q = (document.getElementById('searchFilterInput')?.value || '').trim().toLowerCase();
+            const wf = document.getElementById('wardFilterSelect')?.value || 'ALL';
+            const rf = document.getElementById('roleFilterSelect')?.value || 'ALL';
+
+            return records.filter(r => {
+                const okW = (wf === 'ALL') || (r.ward === wf);
+                const okR = (rf === 'ALL') || ((r.staffRoles || []).includes(rf));
+                const blob = `${r.serial} ${r.ward} ${r.patientName} ${r.formFillerName} ${r.insuranceType} ${r.issueDescription}`.toLowerCase();
+                const okQ = !q || blob.includes(q);
+                return okW && okR && okQ;
+            });
+        }
+
+        function renderArchiveTable() {
+            const tbody = document.getElementById('archiveTbody');
+            const list = getFilteredList();
+
+            if (list.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 44px 16px; color: var(--text-muted);">
+                            <div style="font-weight: 900; font-size: 0.95rem; margin-bottom: 4px;">هیچ گزارشی یافت نشد</div>
+                            <div style="font-size: 0.8rem;">می‌توانید با دکمه «+ افزودن داده نمونه» عملکرد جدول، آمار و خروجی اکسل را تست کنید.</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = list.map(r => `
+                <tr>
+                    <td><span class="serial-tag">${escapeHtml(r.serial)}</span></td>
+                    <td><span class="ward-pill">${escapeHtml(r.ward)}</span></td>
+                    <td>
+                        <div style="font-weight: 800;">${escapeHtml(r.patientName)}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">تکمیل‌کننده: ${escapeHtml(r.formFillerName)}</div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 800; font-size: 0.82rem;">${escapeHtml(r.hasInsurance)}</span>
+                        ${r.hasInsurance === 'دارد' ? `<div style="font-size: 0.74rem; color: var(--text-muted);">${escapeHtml(r.insuranceType)}</div>` : ''}
+                    </td>
+                    <td>${(r.staffRoles || []).map(x => `<span style="display:inline-block; background:var(--bg-surface-3); padding:2px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; margin:2px;">${escapeHtml(x)}</span>`).join('')}</td>
+                    <td style="font-size: 0.8rem; color: var(--text-sec);">${escapeHtml(r.registerDateTime)}</td>
+                    <td>
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" class="chip-btn" style="background: var(--bg-surface-3); color: var(--text-main); padding: 5px 10px;" onclick="openRecordModal('${r.id}', false)">مشاهده</button>
+                            <button type="button" class="chip-btn" style="background: var(--danger-container); color: var(--danger); padding: 5px 10px;" onclick="removeRecord('${r.id}')">حذف</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openRecordModal(id, isReceipt) {
+            const r = records.find(x => x.id === id);
+            if (!r) return;
+
+            document.getElementById('modalTitle').textContent = isReceipt ? '✓ شکایت با موفقیت ثبت شد' : 'پرونده شکایت مراجعه‌کننده';
+            document.getElementById('modalSub').textContent = `کد سریال یکتا: ${r.serial}`;
+
+            document.getElementById('modalBody').innerHTML = `
+                <div style="background: var(--primary-container); color: var(--on-primary-container); padding: 12px 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 800;">سریال اختصاصی گزارش:</span>
+                    <strong style="font-family: monospace; font-size: 1.1rem; direction: ltr;">${escapeHtml(r.serial)}</strong>
+                </div>
+                <div class="detail-cells">
+                    <div class="d-cell"><div class="k">نام بخش</div><div class="v">${escapeHtml(r.ward)}</div></div>
+                    <div class="d-cell"><div class="k">نام بیمار</div><div class="v">${escapeHtml(r.patientName)}</div></div>
+                    <div class="d-cell"><div class="k">نام تکمیل‌کننده</div><div class="v">${escapeHtml(r.formFillerName)}</div></div>
+                    <div class="d-cell"><div class="k">تلفن</div><div class="v">${escapeHtml(r.phone)}</div></div>
+                    <div class="d-cell"><div class="k">تاریخ مراجعه</div><div class="v">${escapeHtml(r.visitDate)}</div></div>
+                    <div class="d-cell"><div class="k">زمان ثبت</div><div class="v">${escapeHtml(r.registerDateTime)}</div></div>
+                    <div class="d-cell"><div class="k">زمان حدودی اتفاق</div><div class="v">${escapeHtml(r.incidentDateTime)}</div></div>
+                    <div class="d-cell"><div class="k">بیمه</div><div class="v">${escapeHtml(r.hasInsurance)} (${escapeHtml(r.insuranceType)})</div></div>
+                </div>
+                <div class="d-cell" style="margin-bottom: 10px;"><div class="k">رده شغلی مورد شکایت</div><div class="v">${(r.staffRoles || []).map(escapeHtml).join(' ، ')}</div></div>
+                <div class="d-cell" style="margin-bottom: 10px;"><div class="k">شرح مساله</div><div class="v" style="white-space: pre-wrap;">${escapeHtml(r.issueDescription)}</div></div>
+                <div class="d-cell"><div class="k">پیشنهاد</div><div class="v" style="white-space: pre-wrap;">${escapeHtml(r.suggestion)}</div></div>
+            `;
+            document.getElementById('appModal').classList.add('open');
+        }
+
+        function closeAppModal() {
+            document.getElementById('appModal').classList.remove('open');
+        }
+
+        function removeRecord(id) {
+            if (!confirm('آیا از حذف این گزارش اطمینان دارید؟')) return;
+            records = records.filter(x => x.id !== id);
+            saveRecords();
+            showToast('گزارش حذف شد');
+        }
+
+        /* ==========================================================================
+           داشبورد آمارگیری
+           ========================================================================== */
+        function renderStatsDashboard() {
+            const total = records.length;
+            document.getElementById('kpiTotalVal').textContent = total;
+
+            const wCounts = {};
+            WARDS.forEach(w => wCounts[w] = 0);
+            const rCounts = {};
+            ROLES.forEach(r => rCounts[r] = 0);
+            let insCnt = 0;
+
+            records.forEach(item => {
+                if (wCounts[item.ward] !== undefined) wCounts[item.ward]++;
+                (item.staffRoles || []).forEach(r => {
+                    if (rCounts[r] !== undefined) rCounts[r]++;
+                });
+                if (item.hasInsurance === 'دارد') insCnt++;
+            });
+
+            const topW = Object.entries(wCounts).sort((a, b) => b[1] - a[1]);
+            if (total > 0 && topW[0][1] > 0) {
+                document.getElementById('kpiTopWardVal').textContent = topW[0][0];
+                document.getElementById('kpiTopWardSub').textContent = `${topW[0][1]} مورد (${Math.round((topW[0][1]/total)*100)}%)`;
+            } else {
+                document.getElementById('kpiTopWardVal').textContent = '—';
+                document.getElementById('kpiTopWardSub').textContent = 'بدون داده';
+            }
+
+            const topR = Object.entries(rCounts).sort((a, b) => b[1] - a[1]);
+            if (total > 0 && topR[0][1] > 0) {
+                document.getElementById('kpiTopRoleVal').textContent = topR[0][0];
+                document.getElementById('kpiTopRoleSub').textContent = `${topR[0][1]} مورد ثبت‌شده`;
+            } else {
+                document.getElementById('kpiTopRoleVal').textContent = '—';
+                document.getElementById('kpiTopRoleSub').textContent = 'بدون داده';
+            }
+
+            const pctIns = total > 0 ? Math.round((insCnt / total) * 100) : 0;
+            document.getElementById('kpiInsuredVal').textContent = `${pctIns}%`;
+            document.getElementById('kpiInsuredSub').textContent = `${insCnt} از ${total} پرونده`;
+
+            const maxW = Math.max(1, ...Object.values(wCounts));
+            document.getElementById('wardStatsContainer').innerHTML = WARDS.map(w => {
+                const c = wCounts[w] || 0;
+                const p = total > 0 ? Math.round((c / total) * 100) : 0;
+                const wBar = Math.round((c / maxW) * 100);
+                return `
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-meta"><span>${w}</span><span>${c} مورد (${p}%)</span></div>
+                        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${wBar}%"></div></div>
+                    </div>
+                `;
+            }).join('');
+
+            const maxR = Math.max(1, ...Object.values(rCounts));
+            document.getElementById('roleStatsContainer').innerHTML = ROLES.map(r => {
+                const c = rCounts[r] || 0;
+                const p = total > 0 ? Math.round((c / total) * 100) : 0;
+                const wBar = Math.round((c / maxR) * 100);
+                return `
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-meta"><span>${r}</span><span>${c} مورد (${p}%)</span></div>
+                        <div class="stat-bar-track"><div class="stat-bar-fill sec" style="width:${wBar}%"></div></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ==========================================================================
+           خروجی‌های اکسل (.xlsx و .csv)
+           ========================================================================== */
+        function downloadExcelXLSX() {
+            const list = getFilteredList();
+            if (list.length === 0) {
+                showToast('هیچ گزارشی برای خروجی اکسل وجود ندارد', true);
+                return;
+            }
+            const rows = list.map((item, i) => ({
+                "ردیف": i + 1,
+                "سریال گزارش": item.serial,
+                "نام بخش": item.ward,
+                "نام بیمار": item.patientName,
+                "تاریخ تولد": item.birthDate,
+                "وضعیت تاهل": item.maritalStatus,
+                "شغل": item.occupation,
+                "تحصیلات": item.education,
+                "تاریخ مراجعه": item.visitDate,
+                "زمان ثبت": item.registerDateTime,
+                "زمان اتفاق": item.incidentDateTime,
+                "علت مراجعه": item.visitReason,
+                "بیمه": item.hasInsurance,
+                "نوع بیمه": item.insuranceType,
+                "رده شغلی مورد شکایت": (item.staffRoles || []).join(" | "),
+                "شرح مساله": item.issueDescription,
+                "پیشنهاد": item.suggestion,
+                "نام تکمیل‌کننده": item.formFillerName,
+                "تلفن": item.phone,
+                "نشانی": item.address
+            }));
+
+            if (typeof XLSX !== 'undefined') {
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.json_to_sheet(rows);
+                XLSX.utils.book_append_sheet(wb, ws, "شکایات بیماران");
+                XLSX.writeFile(wb, `گزارش_شکایات_بیمارستان_${Date.now()}.xlsx`);
+                showToast('فایل اکسل (.xlsx) دانلود شد');
+            } else {
+                downloadExcelCSV();
+            }
+        }
+
+        function downloadStatsExcel() {
+            if (records.length === 0) {
+                showToast('ابتدا حداقل یک گزارش ثبت کنید', true);
+                return;
+            }
+            const total = records.length;
+            const wRows = WARDS.map(w => {
+                const c = records.filter(x => x.ward === w).length;
+                return { "نام بخش": w, "تعداد شکایات": c, "درصد": `${Math.round((c / total) * 100)}%` };
+            });
+            const rRows = ROLES.map(r => {
+                const c = records.filter(x => (x.staffRoles || []).includes(r)).length;
+                return { "رده شغلی": r, "تعداد موارد": c, "درصد": `${Math.round((c / total) * 100)}%` };
+            });
+
+            if (typeof XLSX !== 'undefined') {
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wRows), "آمار بخش‌ها");
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rRows), "آمار رده شغلی");
+                XLSX.writeFile(wb, `آمار_شکایات_بیمارستان_${Date.now()}.xlsx`);
+                showToast('اکسل جداول آماری دانلود شد');
+            } else {
+                downloadExcelCSV();
+            }
+        }
+
+        function downloadExcelCSV() {
+            const list = getFilteredList();
+            if (list.length === 0) {
+                showToast('گزارشی برای خروجی وجود ندارد', true);
+                return;
+            }
+            const headers = [
+                "سریال گزارش", "نام بخش", "نام بیمار", "تاریخ تولد", "وضعیت تاهل",
+                "شغل", "تحصیلات", "تاریخ مراجعه", "زمان ثبت", "زمان اتفاق",
+                "علت مراجعه", "بیمه", "نوع بیمه", "رده شغلی",
+                "شرح مساله", "پیشنهاد", "نام تکمیل‌کننده", "تلفن", "نشانی"
+            ];
+            const lines = [headers.join(",")];
+            list.forEach(item => {
+                const row = [
+                    item.serial, item.ward, item.patientName, item.birthDate, item.maritalStatus,
+                    item.occupation, item.education, item.visitDate, item.registerDateTime, item.incidentDateTime,
+                    item.visitReason, item.hasInsurance, item.insuranceType, (item.staffRoles || []).join(" | "),
+                    item.issueDescription, item.suggestion, item.formFillerName, item.phone, item.address
+                ].map(v => `"${String(v || '').replace(/"/g, '""')}"`);
+                lines.push(row.join(","));
+            });
+
+            const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `شکایات_بیمارستان_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('فایل CSV سازگار با اکسل فارسی دانلود شد');
+        }
+
+        function addSampleData() {
+            const samples = [
+                {
+                    id: "smp1_" + Date.now(),
+                    serial: "CMP-140508-0101-54",
+                    ward: "اورژانس",
+                    patientName: "حسین کریمی",
+                    birthDate: "۱۳۵۸/۰۲/۱۴",
+                    maritalStatus: "متاهل",
+                    occupation: "آزاد",
+                    education: "دیپلم",
+                    visitDate: "۱۴۰۵/۰۸/۰۴",
+                    registerDateTime: "۱۴۰۵/۰۸/۰۴ - ساعت ۱۹:۲۰",
+                    incidentDateTime: "۱۴۰۵/۰۸/۰۴ ساعت ۱۸:۱۰",
+                    visitReason: "درد قفسه سینه",
+                    hasInsurance: "دارد",
+                    insuranceType: "تامین اجتماعی",
+                    formFillerName: "مریم کریمی",
+                    phone: "09112223344",
+                    address: "بلوار خزر",
+                    staffRoles: ["پرستار", "پرسنل اداری (پذیرش، ترخیص، ...)"],
+                    issueDescription: "طولانی شدن زمان پذیرش و نوبت‌دهی در شیفت عصر اورژانس.",
+                    suggestion: "افزایش پرسنل پذیرش در ساعات اوج مراجعه."
+                },
+                {
+                    id: "smp2_" + Date.now(),
+                    serial: "CMP-140508-0102-81",
+                    ward: "پست سی‌سی‌یو ستاره‌دار",
+                    patientName: "فاطمه نادری",
+                    birthDate: "۱۳۴۲/۱۱/۰۳",
+                    maritalStatus: "متاهل",
+                    occupation: "بازنشسته",
+                    education: "لیسانس",
+                    visitDate: "۱۴۰۵/۰۸/۰۵",
+                    registerDateTime: "۱۴۰۵/۰۸/۰۵ - ساعت ۱۱:۱۵",
+                    incidentDateTime: "۱۴۰۵/۰۸/۰۵ ساعت ۰۹:۰۰",
+                    visitReason: "مراقبت پس از آنژیوگرافی",
+                    hasInsurance: "دارد",
+                    insuranceType: "خدمات درمانی (سلامت)",
+                    formFillerName: "رضا نادری",
+                    phone: "09113334455",
+                    address: "خیابان فرهنگ",
+                    staffRoles: ["پزشک"],
+                    issueDescription: "عدم ارائه توضیحات کافی به همراه بیمار در خصوص روند ترخیص.",
+                    suggestion: "تعیین زمان مشخص جهت پاسخگویی پزشک به همراهان."
+                }
+            ];
+            records = [...samples, ...records];
+            saveRecords();
+            showToast('۲ پرونده نمونه جهت تست آمار و اکسل اضافه شد');
+        }
+
+        /* ==========================================================================
+           مدیریت صفحات، تم و ابزارهای کمکی
+           ========================================================================== */
+        function switchScreen(paneId, btn) {
+            document.querySelectorAll('.screen-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.bnav-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(paneId).classList.add('active');
+            btn.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleAppTheme() {
+            const root = document.documentElement;
+            const next = (root.getAttribute('data-theme') || 'dark') === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('HOSP_PWA_THEME_V4', next);
+        }
+
+        function showToast(msg, isErr = false) {
+            const area = document.getElementById('toastArea');
+            const el = document.createElement('div');
+            el.className = 'toast-pill';
+            if (isErr) el.style.backgroundColor = 'var(--danger)';
+            el.textContent = msg;
+            area.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
+        }
+
+        function escapeHtml(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function escapeAttr(s) {
+            return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        document.addEventListener('click', (e) => {
+            const wBox = document.getElementById('wardDropdownBox');
+            if (wBox && !wBox.contains(e.target)) wBox.classList.remove('open');
+            const iBox = document.getElementById('insComboHolder');
+            if (iBox && !iBox.contains(e.target)) closeInsPopup();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('HOSP_PWA_THEME_V4') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            // نمایش دکمه نصب/راهنما در هدر برای دسترسی همیشگی
+            document.getElementById('headerInstallBtn').style.display = 'inline-flex';
+            initWardMenu();
+            initRolesGrid();
+            loadInsuranceMenu();
+            refreshSerialAndTime();
+            loadRecords();
+            updateFormProgress();
+        });
+    </script>
+</body>
+</html>
